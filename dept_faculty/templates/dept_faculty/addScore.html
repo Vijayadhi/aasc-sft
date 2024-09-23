@@ -1,0 +1,72 @@
+{% extends "admin/change_form.html" %}
+{% load custom_tags %}
+
+{% block content %}
+<div class="card-body bg-light align-content-lg-center">
+    {% if students %}
+    <form action="" method="POST">
+        {% csrf_token %}
+        <select name="semester">
+            {% for type in semester %}
+            <option value={{ type.id }}>{{ type.semester }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="assmt_type" id="assmt_type">
+            {% for type in assessment_type %}
+            <option value={{ type.id }}>{{ type.name }}</option>
+            {% endfor %}
+        </select>
+
+        <br><br>
+        {% for student in students %}
+        REG.No: <input type="text" value={{ student.reg_num }} name="std_reg_num" readonly>
+
+        Name: <input type="text" name="std_name" value={{ student.user.name }} readonly>
+
+        Mark: <input type="number" name="mark" id="mark-{{ forloop.counter }}" required><br><br>
+        <div id="warning-{{ forloop.counter }}" class="warning" style="color: red;"></div>
+
+        {% endfor %}
+
+        <input type="submit" value="Submit">
+    </form>
+    {% else %}
+    <p>No students found for this course and batch.</p>
+    {% endif %}
+</div>
+
+<script>
+    // Add an event listener to the assessment type dropdown
+    document.getElementById('assmt_type').addEventListener('change', function() {
+        const selectedType = this.options[this.selectedIndex].text;
+        console.log("working")
+
+        // Check if the selected assessment type is "IAT-I" or "IAT-II"
+        if (selectedType === "IAT-I" || selectedType === "IAT-II") {
+            // If "IAT-I" or "IAT-II" is selected, apply the mark validation
+            document.querySelectorAll("input[name='mark']").forEach(function(markInput) {
+                markInput.addEventListener('input', function() {
+                    // Get the entered value
+                    const value = parseInt(markInput.value);
+                    const warningId = "warning-" + markInput.id.split("-")[1];  // Extract the counter to target the correct warning div
+                    const warning = document.getElementById(warningId);
+
+                    // Check if the entered mark is greater than 50
+                    if (value > 50) {
+                        warning.innerText = "Mark should be less than or equal to 50.";
+                    }
+                    else {
+                        warning.innerText = "";  // Clear the warning message
+                    }
+                });
+            });
+        } else {
+            // Clear any warnings if a different assessment type is selected
+            document.querySelectorAll(".warning").forEach(function(warning) {
+                warning.innerText = "";
+            });
+        }
+    });
+</script>
+{% endblock %}
