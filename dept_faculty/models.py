@@ -69,3 +69,7 @@ class AddAssessmentScore(models.Model):
         db_table = 'add_assessment_score'
         unique_together = (('subject', 'assessment', 'semester'),)
         verbose_name = 'Generate MarkList'
+
+
+class SemConsolidate(models.Model):
+    pass

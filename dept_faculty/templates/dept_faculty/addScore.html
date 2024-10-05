@@ -4,32 +4,38 @@
 {% block content %}
 <div class="card-body bg-light align-content-lg-center">
     {% if students %}
-    <form action="" method="POST">
+    <form action="" method="POST" id="studentForm">
         {% csrf_token %}
-        <select name="semester">
+        <select name="semester" id="semester" required>
+            <option value="">Select Semester</option>
             {% for type in semester %}
-            <option value={{ type.id }}>{{ type.semester }}</option>
+            <option value="{{ type.id }}">{{ type.semester }}</option>
             {% endfor %}
         </select>
 
-        <select name="assmt_type" id="assmt_type">
+        <select name="assmt_type" id="assmt_type" required>
+            <option value="">Select Assessment Type</option>
             {% for type in assessment_type %}
-            <option value={{ type.id }}>{{ type.name }}</option>
+            <option value="{{ type.id }}">{{ type.name }}</option>
             {% endfor %}
         </select>
 
         <br><br>
         {% for student in students %}
-        REG.No: <input type="text" value={{ student.reg_num }} name="std_reg_num" readonly>
+        <label>REG.No:</label>
+        <input type="text" value="{{ student.reg_num }}" name="std_reg_num" readonly>
 
-        Name: <input type="text" name="std_name" value={{ student.user.name }} readonly>
+        <label>Name:</label>
+        <input type="text" name="std_name" value="{{ student.user.name }}" readonly>
 
-        Mark: <input type="number" name="mark" id="mark-{{ forloop.counter }}" required><br><br>
+        <label>Mark:</label>
+        <input type="number" name="mark" id="mark-{{ forloop.counter }}" required>
         <div id="warning-{{ forloop.counter }}" class="warning" style="color: red;"></div>
 
+        <br><br>
         {% endfor %}
 
-        <input type="submit" value="Submit">
+        <input type="submit" value="Submit" id="submitBtn" disabled>
     </form>
     {% else %}
     <p>No students found for this course and batch.</p>
@@ -37,36 +43,50 @@
 </div>
 
 <script>
-    // Add an event listener to the assessment type dropdown
-    document.getElementById('assmt_type').addEventListener('change', function() {
-        const selectedType = this.options[this.selectedIndex].text;
-        console.log("working")
+    // Function to validate marks and enable/disable the submit button
+    function validateMarks() {
+        let allValid = true;  // Flag to track if all inputs are valid
+        const selectedType = document.getElementById('assmt_type').options[document.getElementById('assmt_type').selectedIndex].text;
 
-        // Check if the selected assessment type is "IAT-I" or "IAT-II"
+        // Only apply validation for "IAT-I" or "IAT-II"
         if (selectedType === "IAT-I" || selectedType === "IAT-II") {
-            // If "IAT-I" or "IAT-II" is selected, apply the mark validation
             document.querySelectorAll("input[name='mark']").forEach(function(markInput) {
-                markInput.addEventListener('input', function() {
-                    // Get the entered value
-                    const value = parseInt(markInput.value);
-                    const warningId = "warning-" + markInput.id.split("-")[1];  // Extract the counter to target the correct warning div
-                    const warning = document.getElementById(warningId);
+                const value = parseInt(markInput.value) || 0;  // Default to 0 if not a valid number
+                const warningId = "warning-" + markInput.id.split("-")[1];  // Get the specific warning for this input
+                const warning = document.getElementById(warningId);
 
-                    // Check if the entered mark is greater than 50
-                    if (value > 50) {
-                        warning.innerText = "Mark should be less than or equal to 50.";
-                    }
-                    else {
-                        warning.innerText = "";  // Clear the warning message
-                    }
-                });
-            });
-        } else {
-            // Clear any warnings if a different assessment type is selected
-            document.querySelectorAll(".warning").forEach(function(warning) {
-                warning.innerText = "";
+                // Check if the value is greater than 50
+                if (value > 50) {
+                    warning.innerHTML = "<p>Mark should be less than or equal to 50.</p>";
+                    allValid = false;
+                } else {
+                    warning.innerHTML = "";  // Clear the warning
+                }
+
+                // Check if any mark input is empty
+                if (!markInput.value) {
+                    allValid = false;
+                }
             });
         }
+
+        // Ensure all required fields are filled and valid
+        if (allValid && document.getElementById('semester').value !== "" && document.getElementById('assmt_type').value !== "") {
+            document.getElementById('submitBtn').disabled = false;  // Enable submit button if valid
+        } else {
+            document.getElementById('submitBtn').disabled = true;  // Disable submit button if not valid
+        }
+    }
+
+    // Add event listeners to inputs for real-time validation
+    document.getElementById('assmt_type').addEventListener('change', validateMarks);
+    document.getElementById('semester').addEventListener('change', validateMarks);
+
+    document.querySelectorAll("input[name='mark']").forEach(function(markInput) {
+        markInput.addEventListener('input', validateMarks);
     });
+
+    // Trigger validation when the page loads to handle the default selection
+    window.onload = validateMarks;
 </script>
 {% endblock %}
