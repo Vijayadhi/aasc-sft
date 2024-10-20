@@ -2,91 +2,463 @@
 {% load custom_tags %}
 
 {% block content %}
-<div class="card-body bg-light align-content-lg-center">
-    {% if students %}
-    <form action="" method="POST" id="studentForm">
-        {% csrf_token %}
-        <select name="semester" id="semester" required>
-            <option value="">Select Semester</option>
-            {% for type in semester %}
-            <option value="{{ type.id }}">{{ type.semester }}</option>
-            {% endfor %}
-        </select>
+<div class="container-fluid">
 
-        <select name="assmt_type" id="assmt_type" required>
-            <option value="">Select Assessment Type</option>
-            {% for type in assessment_type %}
-            <option value="{{ type.id }}">{{ type.name }}</option>
-            {% endfor %}
-        </select>
+    <div class="row">
 
-        <br><br>
-        {% for student in students %}
-        <label>REG.No:</label>
-        <input type="text" value="{{ student.reg_num }}" name="std_reg_num" readonly>
+        <div class="col-md-12">
 
-        <label>Name:</label>
-        <input type="text" name="std_name" value="{{ student.user.name }}" readonly>
+            <div class="card shadow-sm">
 
-        <label>Mark:</label>
-        <input type="number" name="mark" id="mark-{{ forloop.counter }}" required>
-        <div id="warning-{{ forloop.counter }}" class="warning" style="color: red;"></div>
+                <div class="card-header bg-primary text-white">
 
-        <br><br>
-        {% endfor %}
+                    <h2 class="card-title">Student Assessment</h2>
 
-        <input type="submit" value="Submit" id="submitBtn" disabled>
-    </form>
-    {% else %}
-    <p>No students found for this course and batch.</p>
-    {% endif %}
+                </div>
+
+                <div class="card-body">
+
+                    <form action="addassessmentscore/" method="POST" id="studentForm">
+
+                        {% csrf_token %}
+
+                        <div class="row">
+
+                            <div class="col-md-6">
+
+                                <div class="form-group">
+
+                                    <label for="semester">Select Semester</label>
+
+                                    <select name="semester" id="semester" required class="form-control">
+
+                                        <option value="">Select Semester</option>
+
+                                        {% for type in semester %}
+
+                                        <option value="{{ type.id }}">{{ type.semester }}</option>
+
+                                        {% endfor %}
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="form-group">
+
+                                    <label for="assmt_type">Select Assessment Type</label>
+
+                                    <select name="assmt_type" id="assmt_type" required class="form-control">
+
+                                        <option value="">Select Assessment Type</option>
+
+                                        {% for type in assessment_type %}
+
+                                        <option value="{{ type.id }}">{{ type.name }}</option>
+
+                                        {% endfor %}
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <button type="button" id="addScoreBtn" class="btn btn-primary " onclick="showFields()">Add
+                            Score
+                        </button>
+
+                        <div id="studentDetails" style="display:none;">
+
+                            <!-- Section for Total Working Days (for attendance) -->
+
+                            <div id="total-working-days" style="display: none;">
+
+                                <div class="form-group">
+
+                                    <label>Total Working Days:</label>
+
+                                    <input type="number" name="total_working_days" id="totalWorkingDays" min="1"
+                                           class="form-control" oninput="validateTotalDays()">
+
+                                </div>
+
+                            </div>
+
+                            {% for student in students %}
+
+                            <div class="student-row">
+
+                                <div class="student-info">
+
+                                    <div class="row">
+
+                                        <div class="col-md-4">
+
+                                            <label>REG.No:</label>
+
+                                            <input type="text" value="{{ student.reg_num }}" name="std_reg_num" readonly
+                                                   class="form-control">
+
+                                        </div>
+
+                                        <div class="col-md-4">
+
+                                            <label>Name:</label>
+
+                                            <input type="text" name="std_name" value="{{ student.user.name }}" readonly
+                                                   class="form-control">
+
+                                        </div>
+
+                                        <div class="col-md-4">
+
+                                            <label>Mark:</label>
+
+                                            <input type="number" name="mark" id="mark-{{ forloop.counter }}"
+                                                   class="form-control" oninput="validateMarks()">
+
+                                            <div id="warning-{{ forloop.counter }}" class="warning text-danger"></div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                                <!-- Attendance input (only for attendance assessment type) -->
+
+                                <div id="attendance-{{ forloop.counter }}" class="attendance-input"
+                                     style="display: none;">
+
+                                    <div class="form-group">
+
+                                        <label>Days Attended:</label>
+
+                                        <input type="number" name="days_attended"
+                                               id="daysAttended-{{ forloop.counter }}" min="0" class="form-control"
+                                               oninput="checkTotalDays(this)">
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            {% endfor %}
+
+                        </div>
+
+                        <input type="submit" value="Submit" id="submitBtn" class="btn btn-primary" disabled>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
+
+<!-- Custom CSS for enhanced design -->
+
+<style>
+
+    .container-fluid {
+
+        padding: 20px;
+
+    }
+
+    .card {
+
+        background-color: #fff;
+
+        border-radius: 10px;
+
+        padding: 20px;
+
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+    }
+
+    .card-header {
+
+        background-color: #007bff;
+
+        color: white;
+
+        padding: 10px;
+
+        border-radius: 10px 10px 0 0;
+
+    }
+
+    .card-body {
+
+        padding: 20px;
+
+    }
+
+    .form-group {
+
+        margin-bottom: 20px;
+
+    }
+
+    label {
+
+        margin-right: 10px;
+
+        font-weight: 600;
+
+        color: #333;
+
+    }
+
+    .form-control {
+
+        width: 100%;
+
+        padding: 10px;
+
+        border: 1px solid #ddd;
+
+        border-radius: 8px;
+
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+
+        margin-right: 10px;
+
+        transition: border-color 0.2s ease;
+
+    }
+
+    .form-control:focus {
+
+        border-color: #007bff;
+
+        outline: none;
+
+    }
+
+    .btn {
+
+        background-color: #007bff;
+
+        color: white;
+
+        border: none;
+
+        padding: 10px 15px;
+
+        border-radius: 8px;
+
+        cursor: pointer;
+
+        transition: background-color 0.3s ease;
+
+    }
+
+    .btn:hover {
+
+        background-color: #0056b3;
+
+    }
+
+    .btn-submit {
+
+        background-color: #28a745;
+
+        color: white;
+
+        border: none;
+
+        padding: 10px 20px;
+
+        border-radius: 8px;
+
+        cursor: pointer;
+
+        margin-top: 20px;
+
+        transition: background-color 0.3s ease;
+
+    }
+
+    .btn-submit:disabled {
+
+        background-color: #ddd;
+
+        cursor: not-allowed;
+
+    }
+
+    .btn-submit:hover:enabled {
+
+        background-color: #218838;
+
+    }
+
+    .warning {
+
+        font-size: 12px;
+
+        color: red;
+
+        margin-top: 5px;
+
+    }
+
+</style>
+
 <script>
-    // Function to validate marks and enable/disable the submit button
+    // Function to show fields based on assessment type and reset form
+    function showFields() {
+        const semester = document.getElementById('semester').value;
+        const assessmentType = document.getElementById('assmt_type').options[document.getElementById('assmt_type').selectedIndex].text;
+
+        if (!semester || !assessmentType) {
+            alert("Please select both the semester and assessment type.");
+            return;
+        }
+
+        // Clear all input fields and warnings when changing the assessment type
+        // clearFields();
+
+        const studentDetails = document.getElementById('studentDetails');
+        studentDetails.style.display = "block";
+
+        if (assessmentType === "Attendance") {
+            document.getElementById('total-working-days').style.display = "block";
+            document.querySelectorAll('.attendance-input').forEach(field => field.style.display = "block");
+            document.querySelectorAll("input[name='mark']").forEach(markField => markField.disabled = true);
+        } else if (assessmentType === "IAT-I" || assessmentType === "IAT-II") {
+            document.getElementById('total-working-days').style.display = "none";
+            document.querySelectorAll('.attendance-input').forEach(field => field.style.display = "none");
+            document.querySelectorAll("input[name='mark']").forEach(markField => markField.disabled = false);
+        }
+    }
+
+    // Function to clear all fields and reset warnings
+    function clearFields() {
+        // Clear marks and attendance fields
+        document.querySelectorAll("input[name='mark'], input[name='days_attended']").forEach(function (inputField) {
+            inputField.value = "";
+        });
+
+        // Clear all warnings
+        document.querySelectorAll("[id^=warning-]").forEach(function (warning) {
+            warning.innerHTML = "";
+        });
+
+        // Reset total working days field
+        document.getElementById('totalWorkingDays').value = "";
+
+        // Disable the submit button initially
+        document.getElementById('submitBtn').disabled = true;
+    }
+
+    // Function to validate marks input
     function validateMarks() {
-        let allValid = true;  // Flag to track if all inputs are valid
+        let allValid = true;
         const selectedType = document.getElementById('assmt_type').options[document.getElementById('assmt_type').selectedIndex].text;
 
-        // Only apply validation for "IAT-I" or "IAT-II"
-        if (selectedType === "IAT-I" || selectedType === "IAT-II") {
-            document.querySelectorAll("input[name='mark']").forEach(function(markInput) {
-                const value = parseInt(markInput.value) || 0;  // Default to 0 if not a valid number
-                const warningId = "warning-" + markInput.id.split("-")[1];  // Get the specific warning for this input
-                const warning = document.getElementById(warningId);
+        document.querySelectorAll("input[name='mark']").forEach(function (markInput) {
+            const value = parseInt(markInput.value) || 0;
+            const warningId = "warning-" + markInput.id.split("-")[1];
+            const warning = document.getElementById(warningId);
 
-                // Check if the value is greater than 50
+            if (selectedType === "IAT-I" || selectedType === "IAT-II") {
                 if (value > 50) {
                     warning.innerHTML = "<p>Mark should be less than or equal to 50.</p>";
                     allValid = false;
                 } else {
-                    warning.innerHTML = "";  // Clear the warning
+                    warning.innerHTML = "";
                 }
+            }
 
-                // Check if any mark input is empty
-                if (!markInput.value) {
-                    allValid = false;
-                }
-            });
-        }
+            if (!markInput.value && !markInput.disabled) {
+                allValid = false;
+            }
+        });
 
-        // Ensure all required fields are filled and valid
+        // Enabling or disabling the submit button based on validation
         if (allValid && document.getElementById('semester').value !== "" && document.getElementById('assmt_type').value !== "") {
-            document.getElementById('submitBtn').disabled = false;  // Enable submit button if valid
+            document.getElementById('submitBtn').disabled = false;
         } else {
-            document.getElementById('submitBtn').disabled = true;  // Disable submit button if not valid
+            document.getElementById('submitBtn').disabled = true;
         }
     }
 
-    // Add event listeners to inputs for real-time validation
-    document.getElementById('assmt_type').addEventListener('change', validateMarks);
-    document.getElementById('semester').addEventListener('change', validateMarks);
+    // Validate Total Working Days field
+    function validateTotalDays() {
+        const totalDays = document.getElementById('totalWorkingDays').value;
+        if (totalDays === "" || parseInt(totalDays) <= 0) {
+            alert("Please enter the total working days.");
+            document.querySelectorAll("input[name='days_attended']").forEach(field => field.disabled = true);
+        } else {
+            document.querySelectorAll("input[name='days_attended']").forEach(field => field.disabled = false);
+        }
+    }
 
-    document.querySelectorAll("input[name='mark']").forEach(function(markInput) {
+    // Check if Total Working Days is entered before allowing Days Attended input
+    function checkTotalDays(attendedInput) {
+        const totalDays = document.getElementById('totalWorkingDays').value;
+        if (totalDays === "" || parseInt(totalDays) <= 0) {
+            alert("Please enter the total working days first.");
+            attendedInput.value = "";
+        } else {
+            calculateAttendanceMarks();
+        }
+    }
+
+    // Calculate attendance marks based on percentage
+    function calculateAttendanceMarks() {
+        const totalDays = parseInt(document.getElementById('totalWorkingDays').value) || 0;
+
+        if (!totalDays) {
+            alert("Please enter the total working days.");
+            return;
+        }
+
+        if (totalDays > 0) {
+            document.querySelectorAll("input[name='days_attended']").forEach(function (attendedInput) {
+                const daysAttended = parseInt(attendedInput.value) || 0;
+                const markInput = document.getElementById('mark-' + attendedInput.id.split("-")[1]);
+
+                const percentage = (daysAttended / totalDays) * 100;
+                const attendanceMarks = (percentage >= 80) ? 5 :
+                    (percentage >= 75) ? 4 :
+                        (percentage >= 70) ? 3 :
+                            (percentage >= 60) ? 2 :
+                                (percentage >= 50) ? 1 : 0;
+
+                markInput.value = attendanceMarks;
+            });
+        }
+        validateMarks(); // Validate after calculating
+    }
+
+    // Attach event listeners to trigger validation on input changes
+    document.querySelectorAll("input[name='mark']").forEach(function (markInput) {
         markInput.addEventListener('input', validateMarks);
     });
 
-    // Trigger validation when the page loads to handle the default selection
-    window.onload = validateMarks;
+    document.querySelectorAll("input[name='days_attended']").forEach(function (attendedInput) {
+        attendedInput.addEventListener('input', checkTotalDays);
+    });
 </script>
+
+
 {% endblock %}

@@ -40,7 +40,6 @@ class AddAssessmentScoreAdmin(admin.ModelAdmin):
     )
 
     def status_display(self, obj):
-        # Get the names of all related Status objects
         return ", ".join(status.name for status in obj.status.all())
     status_display.short_description = 'Status'
 
@@ -48,37 +47,34 @@ class AddAssessmentScoreAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom_urls = [
             path('list/', self.admin_site.admin_view(self.list_view), name='list_view'),
-            path('custom-download/', self.admin_site.admin_view(self.custom_download_view),
-                 name='custom_download_view'),
+            path('custom-download/', self.admin_site.admin_view(self.custom_download_view), name='custom_download_view'),
+            path('<int:pk>/pdf/', self.admin_site.admin_view(self.generate_pdf), name='generate_score_pdf'),
         ]
         return custom_urls + urls
 
     def list_view(self, request):
-        # Custom logic for listing view
         context = self.get_custom_context(request)
         return render(request, 'dept_faculty/change_list.html', context)
 
     def custom_download_view(self, request):
-        # Custom logic for download view
         context = self.get_custom_context(request)
         return render(request, 'dept_faculty/download_view.html', context)
 
     def get_custom_context(self, request):
-        # Helper method to get context data
         current_user = request.user
         course_id = request.GET.get('course_id')
         batch_id = request.GET.get('batch_id')
+
         faculty_qs = Faculty.objects.filter(user=current_user)
         students = Students.objects.all()
         subjects_allocated = SubjectAllocation.objects.filter(faculty__in=faculty_qs)
-        show_add_button = False  # Set to False to hide the Add button
 
         return {
             'students': students,
             'subjects_allocated': subjects_allocated,
             'course_id': course_id,
             'batch_id': batch_id,
-            'show_add_button': show_add_button,
+            'show_add_button': False,  # Hide add button if required
         }
 
     def changelist_view(self, request, extra_context=None):
@@ -95,9 +91,7 @@ class AddAssessmentScoreAdmin(admin.ModelAdmin):
         assmt_type = request.POST.get("assmt_type")
         semester_data = request.POST.get("semester")
 
-        # Debug print statements
-
-        # Fetch related data for extra_context
+        # Fetch related data
         students = Students.objects.filter(batch__id=batch_id)
         semester = Semester.objects.all()
         assessment_type = AssessmentType.objects.all()
@@ -109,21 +103,21 @@ class AddAssessmentScoreAdmin(admin.ModelAdmin):
         extra_context['batch_id'] = batch_id
         extra_context['assessment_type'] = assessment_type
 
+        print(assmt_type)
+
         # Initialize scores dictionary
         scores = {}
-
         for std_id, mark in zip(std_reg_num, std_mark):
             scores[std_id] = mark
+            print(std_id, mark)
 
         try:
-            # Retrieve the related objects
+            # Retrieve related objects
             subject_instance = get_object_or_404(SubjectAllocation, id=subject_id)
             assessment_instance = get_object_or_404(AssessmentType, id=assmt_type)
             semester_instance = get_object_or_404(Semester, id=semester_data)
 
-
-
-            # Create and save the AddAssessmentScore object
+            # Create and save AddAssessmentScore object
             add_score_data = AddAssessmentScore(
                 subject=subject_instance,
                 assessment=assessment_instance,
@@ -131,23 +125,19 @@ class AddAssessmentScoreAdmin(admin.ModelAdmin):
                 scores=scores  # Store the dictionary directly
             )
             add_score_data.save()
+
         except Exception as e:
             print(f"Failed to save data: {e}")
 
-        # Pass extra_context to the form or perform custom logic
+        # Render the form view
         return super().add_view(request, form_url, extra_context=extra_context)
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        return form
-
-
 
     def display_scores(self, obj):
-        scores = obj.scores  # This is the JSONField
+        scores = obj.scores  # Assuming this is a JSONField
         if not scores:
             return "No scores available"
 
-        # Start building the HTML table
+        # Building an HTML table
         html = """
         <table style='border: 1px solid #ccc; border-collapse: collapse;'>
             <tr>
@@ -155,34 +145,23 @@ class AddAssessmentScoreAdmin(admin.ModelAdmin):
                 <th style='border: 1px solid black; padding: 5px;'>Score</th>
             </tr>
         """
-
         for student_id, score in scores.items():
             try:
                 student = Students.objects.get(reg_num=student_id)
-                student_name = student.user.name  # Assuming the name field is in the related user model
+                student_name = student.user.name  # Assuming the user model has a name field
             except Students.DoesNotExist:
                 student_name = "Unknown Student"
 
-            # Add rows to the table with student name and score
             html += f"""
             <tr>
                 <td style='border: 1px solid black; padding: 5px;'>{student_name}</td>
                 <td style='border: 1px solid black; padding: 5px;'>{score}</td>
             </tr>
             """
-
         html += "</table>"
-
         return format_html(html)
 
     display_scores.short_description = "Marks"
-
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path('<int:pk>/pdf/', self.admin_site.admin_view(self.generate_pdf), name='generate_score_pdf'),
-        ]
-        return custom_urls + urls
 
     def generate_pdf(self, request, pk):
         return generate_score_pdf(request, pk)
@@ -192,7 +171,6 @@ class AddAssessmentScoreAdmin(admin.ModelAdmin):
 
     score_pdf_link.short_description = 'Download PDF'
     score_pdf_link.allow_tags = True
-
 admin.site.register(Students)
 admin.site.register(AddAssessmentScore, AddAssessmentScoreAdmin)
 admin.site.register(ScoreStatus)
