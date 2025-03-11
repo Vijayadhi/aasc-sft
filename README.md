@@ -7,7 +7,7 @@ The **College Students Marks Management System** is a comprehensive platform des
 - **Mark Entry and Management**: Faculty can securely enter and update student marks.  
 - **Automated Grade Calculation**: Calculates grades based on customizable criteria.  
 - **Performance Analysis**: Generates detailed performance reports for individual students and groups.  
-- **User Roles**: Admin and faculty roles to ensure secure access and operations.  
+- **User Roles**: Admin, Principal, HOD, Class Tutor and faculty roles to ensure secure access and operations.  
 - **Secure Data Storage**: Ensures data integrity and safety using Django ORM.
 
 ## Technologies Used  
