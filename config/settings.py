@@ -37,7 +37,10 @@ ALLOWED_HOSTS = [
 
 INSTALLED_APPS = [
     'jazzmin',
+    # 'material',
+    # 'material.admin',
     # 'grappelli',
+    # 'jet',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -47,7 +50,7 @@ INSTALLED_APPS = [
     'main_control',
     'clg_admin.apps.ClgAdminConfig',
     'dept_admin',
-    'dept_faculty'
+    'dept_faculty',
 ]
 
 MIDDLEWARE = [
