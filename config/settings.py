@@ -30,7 +30,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1'
     # '192.168.22.168'
     # '.vercel.app',
-    # '.now.sh'
+    # '.now.sh',
+    "aasc-sft.onrender.com"
 ]
 
 # Application definition
