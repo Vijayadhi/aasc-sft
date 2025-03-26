@@ -26,7 +26,7 @@ class FacultyAllocation(models.Model):
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.faculty.user.name} - {self.department.name}"
+        return f"{self.faculty.user.name} - {self.department.name} - Batch: {self.batch.batch_from_date}"
 
     class Meta:
         db_table = 'faculty_allocation'

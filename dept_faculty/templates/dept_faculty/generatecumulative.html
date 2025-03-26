@@ -1,0 +1,183 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+<!-- MDB CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.0.0/mdb.min.css" rel="stylesheet">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-header bg-primary text-white text-center py-3">
+            <h3 class="mb-0">Generate Cumulative Mark List</h3>
+        </div>
+        <div class="card-body">
+            <form id="marklistForm">
+                {% csrf_token %}
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Select Semester</label>
+                        <select class="form-select" name="semester" id="semesterSelect" required>
+                            <option value="" disabled selected>-- Select Semester --</option>
+                            {% for semester in semesters %}
+                            <option value="{{ semester.id }}">{{ semester.semester }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Select Class</label>
+                        <select class="form-select" name="class" id="classSelect" required>
+                            <option value="" disabled selected>-- Select Class --</option>
+                            {% if classes %}
+                            <option value="{{ classes.id }}">{{ classes.course.name }} - {{ classes.batch }}</option>
+                            {% else %}
+                            <option disabled>No class assigned</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+            </form>
+
+            <div class="text-center mt-4">
+                <button type="button" class="btn btn-secondary btn-lg" id="viewMarklistBtn">
+                    <i class="fas fa-list"></i> View All Marklists
+                </button>
+            </div>
+
+            <div class="mt-4" id="marklistResults"></div>
+
+            <div class="text-center mt-4 d-none" id="generateCsvContainer">
+                <button type="button" class="btn btn-success btn-lg" id="generateCSVBtn">
+                    <i class="fas fa-file-csv"></i> Generate Cumulative CSV
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.0.0/mdb.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+        let selectedAssessments = [];
+
+        function toggleGenerateCSVButton() {
+            if (selectedAssessments.length > 0) {
+                $("#generateCSVBtn").show();
+            } else {
+                $("#generateCSVBtn").hide();
+            }
+        }
+
+        // Fetch mark lists
+        $("#viewMarklistBtn").click(function () {
+            let semester = $("#semesterSelect").val();
+            let classId = $("#classSelect").val();
+
+            if (!semester || !classId) {
+                alert("Please select a semester and a class.");
+                return;
+            }
+
+            $.ajax({
+                url: "{% url 'processmarklist' %}",
+                method: "POST",
+                data: {
+                    semester: semester,
+                    classId: classId,
+                    csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val()
+                },
+                beforeSend: function () {
+                    $("#marklistResults").html("<p class='text-center'>Loading...</p>");
+                },
+                success: function (response) {
+                    if (response.data.length > 0) {
+                        let table = `
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Select</th>
+                                            <th>S.No</th>
+                                            <th>Assessment Name</th>
+                                            <th>Month</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+
+                        response.data.forEach((item, index) => {
+                            table += `
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="marklist-checkbox" data-id="${item.id}">
+                                    </td>
+                                    <td>${index + 1}</td>
+                                    <td>${item.assessment__name}</td>
+                                    <td>${item.month}</td>
+                                    <td>
+                                        <a href="/admin/dept_faculty/addassessmentscore/${item.id}/pdf/" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-file-pdf"></i> Download PDF
+                                        </a>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+
+                        table += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+
+                        table += `
+                            <div class="text-center mt-3">
+                                <button type="button" id="generateCSVBtn" class="btn btn-success btn-lg" style="display: none;">
+                                    <i class="fas fa-file-csv"></i> Generate Cumulative CSV
+                                </button>
+                            </div>
+                        `;
+
+                        $("#marklistResults").html(table);
+                    } else {
+                        $("#marklistResults").html("<p class='text-center text-danger'>No mark lists found.</p>");
+                    }
+                },
+                error: function () {
+                    alert("Error processing request. Please try again.");
+                }
+            });
+        });
+
+        // Handle checkbox selection
+        $(document).on("change", ".marklist-checkbox", function () {
+            let id = $(this).data("id");
+
+            if ($(this).is(":checked")) {
+                selectedAssessments.push(id);
+            } else {
+                selectedAssessments = selectedAssessments.filter(item => item !== id);
+            }
+
+            toggleGenerateCSVButton();
+        });
+
+        // Generate CSV
+        $(document).on("click", "#generateCSVBtn", function () {
+            if (selectedAssessments.length === 0) {
+                alert("Please select at least one mark list.");
+                return;
+            }
+
+            let url = "{% url 'fetch_student_marks' %}?assessments=" + selectedAssessments.join(",");
+
+            window.location.href = url;  // This triggers the CSV download
+        });
+    });
+</script>
+
+{% endblock %}

@@ -26,8 +26,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
 
-   # '192.168.0.110',
-    #'127.0.0.1'
+    # '192.168.0.110',
+    '127.0.0.1',
     # '192.168.22.168'
     # '.vercel.app',
     # '.now.sh',
@@ -38,6 +38,7 @@ ALLOWED_HOSTS = [
 
 INSTALLED_APPS = [
     'jazzmin',
+    'material',
     # 'material',
     # 'material.admin',
     # 'grappelli',
@@ -154,7 +155,7 @@ JAZZMIN_SETTINGS = {
     "site_title": "AASC-ST-ASMT-MANGER",
     "site_header": "AASC-MANAGER",
     "site_logo": "backend/assets/img/achariya.png",
-    "site_brand": "AASC-Administration",
+    "site_brand": "AASC-Admin",
     "copyright": "Vigneshwaran <br>Your Vision, My Creation ",
     "site_logo_classes": "img-circle",
     "welcome_sign": "Welcome to the AASC Assessment Management System",
@@ -170,14 +171,15 @@ JAZZMIN_SETTINGS = {
         "main_control.CustomUser": "fas fa-users",
     },
 
-    # "custom_links": {
-    #     "clg_admin": [{
-    #         "name": "Manage Internals",
-    #         "url": "/internals/manage_internals/",
-    #         "icon": "fas fa-comments",
-    #         # "permissions": ["faculty.view_faculty"]
-    #     }]
-    # },
+    "custom_links": {
+        "dept_faculty": [{
+            "name": "Generate Cumulative",
+            "url": "/internals/generatecummulative/",
+            "icon": "fas fa-degree",
+            "target": "_blank"
+            # "permissions": ["faculty.view_faculty"]
+        }]
+    },
     "changeform_format": "carousel",
 
 }
@@ -193,11 +195,18 @@ CSRF_TRUSTED_ORIGINS = [
     'https://aasc-sft.onrender.com',
 ]
 
+import os
+import environ
+
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'venerablevignesh@gmail.com'
-EMAIL_HOST_PASSWORD = 'drftcutfbaizkniy'
+EMAIL_HOST_PASSWORD = env('EMAIL_PASSWORD')  # Load from .env
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
 LOGIN_REDIRECT_URL = '/admin/'  # Redirect to Django admin dashboard

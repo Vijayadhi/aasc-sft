@@ -20,11 +20,17 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 
+from dept_faculty.views import generatecummulative, processmarklist, fetch_student_marks
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('main_control.urls')),
     path('clg_admin/', include('clg_admin.urls')),
     path('dept_admin/', include('dept_admin.urls')),
+    # path('generatecummulative/', generatecummulative),
+    path('processmarklist/', processmarklist, name="processmarklist"),
+    path('fetch_student_marks/', fetch_student_marks, name="fetch_student_marks"),
+
     path('internals/', include('dept_faculty.urls')),
     path('password_reset/', auth_views.PasswordResetView.as_view(template_name='registration/password_reset_form.html'),
          name='password_reset'),

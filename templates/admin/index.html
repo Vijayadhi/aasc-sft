@@ -10,5 +10,11 @@
 
 </div>
 
-
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll("a[href='generatecummulative/']").forEach(link => {
+            link.setAttribute("target", "_blank");
+        });
+    });
+</script>
 {% endblock %}
