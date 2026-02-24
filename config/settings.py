@@ -207,7 +207,8 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'venerablevignesh@gmail.com'
-EMAIL_HOST_PASSWORD = env('EMAIL_PASSWORD')  # Load from .env
+# EMAIL_HOST_PASSWORD = env('EMAIL_PASSWORD')  # Load from .env
+EMAIL_HOST_PASSWORD = "hello"  # Load from .env
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 LOGIN_REDIRECT_URL = '/admin/'  # Redirect to Django admin dashboard
